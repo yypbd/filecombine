@@ -3,7 +3,11 @@
 uses
   EMemLeaks,
   Vcl.Forms,
-  Form.FileCombineMain in 'Form.FileCombineMain.pas' {FormFileCombineMain};
+  Form.FileCombineMain in 'Form.FileCombineMain.pas' {FormFileCombineMain},
+  ListView.EmptyMessage in 'ListView.EmptyMessage.pas',
+  Sort.StringCompare in 'Sort.StringCompare.pas',
+  Sort.StringList in 'Sort.StringList.pas',
+  Sort.ListView in 'Sort.ListView.pas';
 
 {$R *.res}
 

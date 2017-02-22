@@ -3,8 +3,9 @@ object FormFileCombineMain: TFormFileCombineMain
   Top = 0
   Caption = 'FormFileCombineMain'
   ClientHeight = 561
-  ClientWidth = 927
+  ClientWidth = 928
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -14,36 +15,21 @@ object FormFileCombineMain: TFormFileCombineMain
   Position = poScreenCenter
   PixelsPerInch = 96
   TextHeight = 13
-  object ListViewFile: TListView
-    Left = 0
+  object Splitter1: TSplitter
+    Left = 523
     Top = 0
-    Width = 525
     Height = 561
-    Align = alLeft
-    Columns = <
-      item
-        Caption = 'FileName'
-        Width = 500
-      end>
-    DragMode = dmAutomatic
-    MultiSelect = True
-    TabOrder = 0
-    ViewStyle = vsReport
-    OnDragDrop = ListViewFileDragDrop
-    OnDragOver = ListViewFileDragOver
-    ExplicitLeft = -5
+    Align = alRight
+    ExplicitLeft = 925
+    ExplicitTop = -8
   end
-  object PanelMain: TPanel
-    Left = 525
+  object PanelRight: TPanel
+    Left = 526
     Top = 0
     Width = 402
     Height = 561
-    Align = alClient
-    TabOrder = 1
-    ExplicitLeft = 531
-    ExplicitTop = 208
-    ExplicitWidth = 381
-    ExplicitHeight = 305
+    Align = alRight
+    TabOrder = 0
     object PanelButton: TPanel
       Left = 1
       Top = 1
@@ -51,7 +37,6 @@ object FormFileCombineMain: TFormFileCombineMain
       Height = 44
       Align = alTop
       TabOrder = 0
-      ExplicitWidth = 467
       object ButtonCombine: TButton
         Left = 12
         Top = 8
@@ -69,11 +54,30 @@ object FormFileCombineMain: TFormFileCombineMain
       Height = 515
       Align = alClient
       TabOrder = 1
-      ExplicitLeft = 48
-      ExplicitTop = 83
-      ExplicitWidth = 345
-      ExplicitHeight = 510
     end
+  end
+  object ListViewFile: TListView
+    Left = 0
+    Top = 0
+    Width = 523
+    Height = 561
+    Align = alClient
+    Columns = <
+      item
+        Caption = 'FileName'
+        Width = 500
+      end>
+    DragMode = dmAutomatic
+    MultiSelect = True
+    ReadOnly = True
+    RowSelect = True
+    TabOrder = 1
+    ViewStyle = vsReport
+    OnColumnClick = ListViewFileColumnClick
+    OnDragDrop = ListViewFileDragDrop
+    OnDragOver = ListViewFileDragOver
+    OnResize = ListViewFileResize
+    ExplicitLeft = 3
   end
   object SaveDialogCombined: TSaveDialog
     Left = 580

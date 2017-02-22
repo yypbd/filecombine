@@ -34,7 +34,7 @@ begin
   try
     StringList.Text := FEmptyMessage;
 
-    TextTop := 30;
+    TextTop := 80;
     for Text in StringList do
     begin
       TextWidth := Canvas.TextWidth( Text );

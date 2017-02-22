@@ -88,6 +88,10 @@
             <Form>FormFileCombineMain</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="ListView.EmptyMessage.pas"/>
+        <DCCReference Include="Sort.StringCompare.pas"/>
+        <DCCReference Include="Sort.StringList.pas"/>
+        <DCCReference Include="Sort.ListView.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

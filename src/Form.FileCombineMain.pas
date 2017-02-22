@@ -9,18 +9,23 @@ uses
 
 type
   TFormFileCombineMain = class(TForm)
-    ListViewFile: TListView;
     SaveDialogCombined: TSaveDialog;
-    PanelMain: TPanel;
+    PanelRight: TPanel;
     PanelButton: TPanel;
     ButtonCombine: TButton;
     MemoLog: TMemo;
+    Splitter1: TSplitter;
+    ListViewFile: TListView;
     procedure ListViewFileDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure ListViewFileDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure ButtonCombineClick(Sender: TObject);
+    procedure ListViewFileColumnClick(Sender: TObject; Column: TListColumn);
+    procedure ListViewFileResize(Sender: TObject);
   private
     { Private declarations }
+    FAsc: Boolean;
+
   protected
     FListViewWndProc: TWndMethod;
 
@@ -39,7 +44,7 @@ var
 implementation
 
 uses
-  ShellAPI;
+  ShellAPI, Sort.ListView, Sort.StringList;
 
 {$R *.dfm}
 
@@ -61,17 +66,28 @@ begin
     begin
       FileName := ListViewFile.Items[I].Caption;
 
-      FileStreamItem := TFileStream.Create( FileName, fmOpenRead );
-      try
-        if FileStreamItem.Size > 0 then
-        begin
-          FileStreamTotal.CopyFrom( FileStreamItem, FileStreamItem.Size );
+      MemoLog.Lines.Add( 'Combine file: ' + ExtractFileName(FileName) );
+      if FileExists( FileName ) then
+      begin
+        FileStreamItem := TFileStream.Create( FileName, fmOpenRead );
+        try
+          if FileStreamItem.Size > 0 then
+          begin
+            FileStreamTotal.CopyFrom( FileStreamItem, FileStreamItem.Size );
 
-          MemoLog.Lines.Add( 'Combine file: ' + ExtractFileName(FileName) );
-          MemoLog.Lines.Add( Format('  filesize: %d, totalsize: %d', [FileStreamItem.Size, FileStreamTotal.Size]) );
+            MemoLog.Lines.Add( Format('  filesize: %d, totalsize: %d', [FileStreamItem.Size, FileStreamTotal.Size]) );
+          end
+          else
+          begin
+            MemoLog.Lines.Add( '  pass: size is 0' );
+          end;
+        finally
+          FileStreamItem.Free;
         end;
-      finally
-        FileStreamItem.Free;
+      end
+      else
+      begin
+        MemoLog.Lines.Add( '  pass: not exists file' );
       end;
     end;
     MemoLog.Lines.Add( '== Finish combining process ==' );
@@ -90,6 +106,8 @@ begin
   ListViewFile.WindowProc := ListViewWndProc;
   DragAcceptFiles( ListViewFile.Handle, True );
 
+  FAsc := True;
+
   ListViewFile.EmptyMessage := 'Drag&drop files from Windows Explorer.';
 end;
 
@@ -99,6 +117,13 @@ begin
   DragAcceptFiles( ListViewFile.Handle, False );
 
   inherited;
+end;
+
+procedure TFormFileCombineMain.ListViewFileColumnClick(Sender: TObject;
+  Column: TListColumn);
+begin
+  TListViewSort.SortByColumn( ListViewFile, Column.Index, False, FAsc );
+  FAsc := not FAsc;
 end;
 
 procedure TFormFileCombineMain.ListViewFileDragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -129,6 +154,11 @@ begin
   Accept := Sender = ListViewFile;
 end;
 
+procedure TFormFileCombineMain.ListViewFileResize(Sender: TObject);
+begin
+  ListViewFile.Column[0].Width := ListViewFile.Width - 30;
+end;
+
 procedure TFormFileCombineMain.ListViewWndProc(var Message: TMessage);
 begin
   if Message.Msg = WM_DROPFILES then
@@ -144,24 +174,35 @@ var
   FileName: PWideChar;
   I, Size, FileCount: integer;
   ListItem: TListItem;
+  FileList: TStringList;
 begin
-  FileName := '';
-  FileCount := DragQueryFile(Msg.wParam, $FFFFFFFF, FileName, 255);
-  for I := 0 to FileCount - 1 do
-  begin
-    Size := DragQueryFile(Msg.wParam, I, nil, 0) + 1;
-    FileName := StrAlloc(Size);
-    DragQueryFile(Msg.wParam, I, FileName, Size);
-    if FileExists(FileName) then
+  FileList := TStringList.Create;
+  try
+    FileName := '';
+    FileCount := DragQueryFile(Msg.wParam, $FFFFFFFF, FileName, 255);
+    for I := 0 to FileCount - 1 do
+    begin
+      Size := DragQueryFile(Msg.wParam, I, nil, 0) + 1;
+      FileName := StrAlloc(Size);
+      DragQueryFile(Msg.wParam, I, FileName, Size);
+      if FileExists(FileName) then
+      begin
+        FileList.Add( FileName );
+      end;
+      StrDispose(FileName);
+    end;
+    DragFinish(Msg.wParam);
+
+    TStringListSort.Sort( FileList, False, True );
+
+    for I := 0 to FileList.Count - 1 do
     begin
       ListItem := ListViewFile.Items.Add;
-      ListItem.Caption := FileName;
+      ListItem.Caption := FileList.Strings[I];
     end;
-    StrDispose(FileName);
+  finally
+    FileList.Free;
   end;
-  DragFinish(Msg.wParam);
-
-  ListViewFile.AlphaSort;
 end;
 
 end.
