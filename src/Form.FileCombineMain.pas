@@ -4,18 +4,21 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.StdCtrls, Vcl.ExtCtrls,
+  ListView.EmptyMessage;
 
 type
   TFormFileCombineMain = class(TForm)
     ListViewFile: TListView;
-    Button1: TButton;
     SaveDialogCombined: TSaveDialog;
-    Memo1: TMemo;
+    PanelMain: TPanel;
+    PanelButton: TPanel;
+    ButtonCombine: TButton;
+    MemoLog: TMemo;
     procedure ListViewFileDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure ListViewFileDragDrop(Sender, Source: TObject; X, Y: Integer);
-    procedure Button1Click(Sender: TObject);
+    procedure ButtonCombineClick(Sender: TObject);
   private
     { Private declarations }
   protected
@@ -42,30 +45,38 @@ uses
 
 { TForm1 }
 
-procedure TFormFileCombineMain.Button1Click(Sender: TObject);
+procedure TFormFileCombineMain.ButtonCombineClick(Sender: TObject);
 var
   I: Integer;
-  FileStream: TFileStream;
+  FileStreamTotal: TFileStream;
   FileStreamItem: TFileStream;
+  FileName: string;
 begin
   if SaveDialogCombined.Execute then
   begin
-    FileStream := TFileStream.Create( SaveDialogCombined.FileName, fmCreate );
+    FileStreamTotal := TFileStream.Create( SaveDialogCombined.FileName, fmCreate );
 
+    MemoLog.Lines.Add( '== Start combining process ==' );
     for I := 0 to ListViewFile.Items.Count - 1 do
     begin
-      FileStreamItem := TFileStream.Create( ListViewFile.Items[I].Caption, fmOpenRead );
+      FileName := ListViewFile.Items[I].Caption;
+
+      FileStreamItem := TFileStream.Create( FileName, fmOpenRead );
       try
         if FileStreamItem.Size > 0 then
         begin
-          FileStream.CopyFrom( FileStreamItem, FileStreamItem.Size );
+          FileStreamTotal.CopyFrom( FileStreamItem, FileStreamItem.Size );
+
+          MemoLog.Lines.Add( 'Combine file: ' + ExtractFileName(FileName) );
+          MemoLog.Lines.Add( Format('  filesize: %d, totalsize: %d', [FileStreamItem.Size, FileStreamTotal.Size]) );
         end;
       finally
         FileStreamItem.Free;
       end;
     end;
+    MemoLog.Lines.Add( '== Finish combining process ==' );
 
-    FileStream.Free;
+    FileStreamTotal.Free;
   end;
 end;
 
@@ -73,9 +84,13 @@ procedure TFormFileCombineMain.DoCreate;
 begin
   inherited;
 
+  Caption := Application.Title;
+
   FListViewWndProc := ListViewFile.WindowProc;
   ListViewFile.WindowProc := ListViewWndProc;
   DragAcceptFiles( ListViewFile.Handle, True );
+
+  ListViewFile.EmptyMessage := 'Drag&drop files from Windows Explorer.';
 end;
 
 procedure TFormFileCombineMain.DoDestroy;
