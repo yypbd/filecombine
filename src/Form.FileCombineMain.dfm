@@ -46,6 +46,15 @@ object FormFileCombineMain: TFormFileCombineMain
         TabOrder = 0
         OnClick = ButtonCombineClick
       end
+      object ButtonClearFiles: TButton
+        Left = 120
+        Top = 8
+        Width = 75
+        Height = 25
+        Caption = 'Clear Files'
+        TabOrder = 1
+        OnClick = ButtonClearFilesClick
+      end
     end
     object MemoLog: TMemo
       Left = 1
@@ -77,9 +86,9 @@ object FormFileCombineMain: TFormFileCombineMain
     OnDragDrop = ListViewFileDragDrop
     OnDragOver = ListViewFileDragOver
     OnResize = ListViewFileResize
-    ExplicitLeft = 3
   end
   object SaveDialogCombined: TSaveDialog
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
     Left = 580
     Top = 128
   end

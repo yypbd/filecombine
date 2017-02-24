@@ -16,12 +16,14 @@ type
     MemoLog: TMemo;
     Splitter1: TSplitter;
     ListViewFile: TListView;
+    ButtonClearFiles: TButton;
     procedure ListViewFileDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure ListViewFileDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure ButtonCombineClick(Sender: TObject);
     procedure ListViewFileColumnClick(Sender: TObject; Column: TListColumn);
     procedure ListViewFileResize(Sender: TObject);
+    procedure ButtonClearFilesClick(Sender: TObject);
   private
     { Private declarations }
     FAsc: Boolean;
@@ -50,6 +52,11 @@ uses
 
 { TForm1 }
 
+procedure TFormFileCombineMain.ButtonClearFilesClick(Sender: TObject);
+begin
+  ListViewFile.Items.Clear;
+end;
+
 procedure TFormFileCombineMain.ButtonCombineClick(Sender: TObject);
 var
   I: Integer;
@@ -57,42 +64,54 @@ var
   FileStreamItem: TFileStream;
   FileName: string;
 begin
+  if ListViewFile.Items.Count = 0 then
+  begin
+    ShowMessage( 'File list is empty.' + sLineBreak + 'Add files first.' );
+    Exit;
+  end;
+
   if SaveDialogCombined.Execute then
   begin
     FileStreamTotal := TFileStream.Create( SaveDialogCombined.FileName, fmCreate );
 
-    MemoLog.Lines.Add( '== Start combining process ==' );
-    for I := 0 to ListViewFile.Items.Count - 1 do
-    begin
-      FileName := ListViewFile.Items[I].Caption;
-
-      MemoLog.Lines.Add( 'Combine file: ' + ExtractFileName(FileName) );
-      if FileExists( FileName ) then
+    try
+      MemoLog.Lines.Clear;
+      MemoLog.Lines.Add( '== Start combining process ==' );
+      for I := 0 to ListViewFile.Items.Count - 1 do
       begin
-        FileStreamItem := TFileStream.Create( FileName, fmOpenRead );
-        try
-          if FileStreamItem.Size > 0 then
-          begin
-            FileStreamTotal.CopyFrom( FileStreamItem, FileStreamItem.Size );
+        FileName := ListViewFile.Items[I].Caption;
 
-            MemoLog.Lines.Add( Format('  filesize: %d, totalsize: %d', [FileStreamItem.Size, FileStreamTotal.Size]) );
-          end
-          else
-          begin
-            MemoLog.Lines.Add( '  pass: size is 0' );
+        MemoLog.Lines.Add( 'Combine file: ' + ExtractFileName(FileName) );
+        if FileExists( FileName ) then
+        begin
+          FileStreamItem := TFileStream.Create( FileName, fmOpenRead );
+          try
+            if FileStreamItem.Size > 0 then
+            begin
+              FileStreamTotal.CopyFrom( FileStreamItem, FileStreamItem.Size );
+
+              MemoLog.Lines.Add( Format('  filesize: %d, totalsize: %d', [FileStreamItem.Size, FileStreamTotal.Size]) );
+            end
+            else
+            begin
+              MemoLog.Lines.Add( '  pass: size is 0' );
+            end;
+          finally
+            FileStreamItem.Free;
           end;
-        finally
-          FileStreamItem.Free;
+        end
+        else
+        begin
+          MemoLog.Lines.Add( '  pass: not exists file' );
         end;
-      end
-      else
-      begin
-        MemoLog.Lines.Add( '  pass: not exists file' );
-      end;
-    end;
-    MemoLog.Lines.Add( '== Finish combining process ==' );
 
-    FileStreamTotal.Free;
+        Application.ProcessMessages;
+        Sleep(1);
+      end;
+      MemoLog.Lines.Add( '== Finish combining process ==' );
+    finally
+      FileStreamTotal.Free;
+    end;
   end;
 end;
 
